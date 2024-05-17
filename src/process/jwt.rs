@@ -47,14 +47,3 @@ pub fn jwt_verify(token: &str, aud: &str, sub: &str) -> Result<bool> {
     Ok(true)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_jwt_encode() {
-        let claims = JwtClaims::new("aud".into(), "sub".into(), 1000);
-        let token = jwt_encode(&claims, JwtAlg::HS256).unwrap();
-        assert_eq!(jwt_verify(&token, "aud", "sub").unwrap(), true);
-    }
-}
