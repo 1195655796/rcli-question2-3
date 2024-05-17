@@ -5,3 +5,21 @@ GET http://localhost:8080/Cargo.toml
 ### Test static file with tower-http
 
 GET http://localhost:8080/tower/fixtures/ed25519.pk
+
+### test index
+GET http://localhost:8080/
+
+### test file
+GET http://localhost:8080/Cargo.toml
+
+### test file2
+GET http://localhost:8080/fixtures/std.txt
+
+### test tower
+GET http://localhost:8080/tower/Cargo.toml
+
+### test tower index.html
+GET http://localhost:8080/tower/assets/index.html
+
+### test dir
+GET http://localhost:8080/fixtures/

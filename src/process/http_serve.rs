@@ -5,13 +5,31 @@ use axum::{
     routing::get,
     Router,
 };
-use std::{net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{net::SocketAddr, ops::Deref, path::PathBuf, sync::Arc};
+use tokio::fs::read_dir;
 use tower_http::services::ServeDir;
 use tracing::{info, warn};
 
 #[derive(Debug)]
 struct HttpServeState {
     path: PathBuf,
+}
+
+#[allow(dead_code)]
+struct HttpServe(Arc<HttpServeState>);
+#[allow(dead_code)]
+impl HttpServe {
+    pub fn new(path: PathBuf) -> Self {
+        Self(Arc::new(HttpServeState { path }))
+    }
+}
+
+impl Deref for HttpServe {
+    type Target = Arc<HttpServeState>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 pub async fn process_http_serve(path: PathBuf, port: u16) -> Result<()> {
@@ -46,6 +64,17 @@ async fn file_handler(
         // if it is a directory, list all files/subdirectories
         // as <li><a href="/path/to/file">file name</a></li>
         // <html><body><ul>...</ul></body></html>
+        if p.is_dir() {
+            let mut content = String::new();
+            let mut entries = read_dir(p).await.unwrap();
+            while let Some(entry) = entries.next_entry().await.unwrap() {
+                let path = entry.path();
+                let name = path.file_name().unwrap().to_str().unwrap();
+                content.push_str(&format!("<li><a href=\"{}\">{}</a></li>", name, name));
+            }
+            let html = format!("<html><body><ul>{}</ul></body></html>", content);
+            return (StatusCode::OK, html);
+        }
         match tokio::fs::read_to_string(p).await {
             Ok(content) => {
                 info!("Read {} bytes", content.len());
